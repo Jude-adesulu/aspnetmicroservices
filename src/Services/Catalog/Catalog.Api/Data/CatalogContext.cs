@@ -9,11 +9,17 @@ namespace Catalog.Api.Data
     {
         public CatalogContext(IConfiguration configuration)
         {
-            var client = new MongoClient(configuration.GetValue<string>("DatabaseSettings:ConnectionString"));
-            //get database name or create one if it doesn't exist
-            var database = client.GetDatabase(configuration.GetValue<string>("DatabaseSettings:DatabaseName"));
+            var connectionString = configuration.GetValue<string>("DatabaseSettings:ConnectionString");
+            var dbName = configuration.GetValue<string>("DatabaseSettings:DatabaseName");
+            var collectionName = configuration.GetValue<string>("DatabaseSettings:CollectionName");
 
-            Products = database.GetCollection<Product>(configuration.GetValue<string>("DatabaseSettings:CollectionName"));
+            if (connectionString is null || dbName is null || collectionName is null) throw new ArgumentNullException("Connection Settings can't be null");
+
+            var client = new MongoClient(connectionString);
+            //get database name or create one if it doesn't exist
+            var database = client.GetDatabase(dbName);
+
+            Products = database.GetCollection<Product>(collectionName);
             CatalogContextSeed.SeedData(Products);
         }
         public IMongoCollection<Product> Products { get; }
